@@ -15,6 +15,7 @@ class PortConfiguration:
     def __init__(self):
         self.Direction =0
         self.PortLetterCode=0
+        self.Trame=0
         self.Message ='Ready to send'
     def Handle_modeOrState(self):
 
@@ -66,6 +67,20 @@ class PortConfiguration:
             
             self.Message="Error, the pin number is incorrect."
 
+
+    def Prepare_trame(self):
+        key_start_1=18
+        key_start_1 = key_start_1.to_bytes(1,'big')
+
+        PinNumber = (CurrentPort.pinNum).to_bytes(1,'big')
+        Direction = (CurrentPort.Direction).to_bytes(1,'big')
+        PortLetterCode = (CurrentPort.PortLetterCode).to_bytes(1,'big')
+
+        self.Trame = key_start_1 + key_start_1  + PinNumber+ Direction + PortLetterCode 
+        #return(trame) 
+
+
+
             
 #Lien série avec la carte
 
@@ -116,19 +131,8 @@ while True:
         match(CurrentPort.Message):
             case 'Ready to send':
 
-                print("In there 2!")
-                
-                key_start_1=18
-                key_start_1 = key_start_1.to_bytes(1,'big')
-
-                #PortLetterCode = PortLetterCode.to_bytes(1,'big')
-                PinNumber = (CurrentPort.pinNum).to_bytes(1,'big')
-                Direction = (CurrentPort.Direction).to_bytes(1,'big')
-                PortLetterCode = (CurrentPort.PortLetterCode).to_bytes(1,'big')
-
-                trame = key_start_1 + key_start_1  + PinNumber+ Direction + PortLetterCode   
-                print("The trame is: ",trame)
-
+                CurrentPort.Prepare_trame()
+                print(CurrentPort.Trame)
                 #serialInst.write(trame)
                 time.sleep(5)
 
