@@ -84,7 +84,7 @@ class PortConfiguration:
             
 #Lien série avec la carte
 
-#serialInst=serial.Serial('COM7',115200)
+serialInst=serial.Serial('COM6',115200)
 
 while True:
     CommandInput= input("""Hello! Enter the desire command among these ones:\n 
@@ -133,7 +133,7 @@ while True:
 
                 CurrentPort.Prepare_trame()
                 print(CurrentPort.Trame)
-                #serialInst.write(trame)
+                serialInst.write(CurrentPort.Trame)
                 time.sleep(5)
 
             case("Error, the Direction is incorrect."):
@@ -149,6 +149,6 @@ while True:
 
         
 
-    #serialInst.close()
+    serialInst.close()
 
 
