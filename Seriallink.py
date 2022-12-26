@@ -57,6 +57,7 @@ class PortConfiguration:
                 self.Message="Error, the port letter is incorrect."
 
 
+
     def Handle_PinNumber(self):
 
         self.pinNum = int(self.pinNum)
