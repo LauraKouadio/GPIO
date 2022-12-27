@@ -41,8 +41,8 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 uint8_t check;
-uint8_t Rx_data[5]= {0};
-uint8_t Tx_data[40];
+volatile uint8_t Rx_data[5]={0}; //{18,18,10,4,3};{0};
+volatile uint8_t Tx_data[6]="Laura\n";
 struct PortIO Current_Port;
 
 
@@ -122,10 +122,10 @@ void Port_read_value(struct PortIO* _this){
 
 	_this->actual_direction = *(_this->portAdressOdr) & (1<<_this->numPin);
 	if(_this->actual_direction == (1<<_this->numPin)){
-		Tx_data[0]=1;
+		//Tx_data[0]=1;
 	}
 	else{
-		Tx_data[0]=0;
+		//Tx_data[0]=0;
 	}
 
 
@@ -271,36 +271,15 @@ void Port_free(struct PortIO* _this)
 //
 }
 
-/* USER CODE BEGIN PV */
-
-/* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 //static void MX_GPIO_Init(void);
 static void MX_USART2_UART_Init(void);
-/* USER CODE BEGIN PFP */
-
-/* USER CODE END PFP */
-
-/* Private user code ---------------------------------------------------------*/
-/* USER CODE BEGIN 0 */
 
 
-
-/* USER CODE END 0 */
-
-/**
-  * @brief  The application entry point.
-  * @retval int
-  */
 int main(void)
 {
-  /* USER CODE BEGIN 1 */
-
-  /* USER CODE END 1 */
-
-  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
@@ -320,7 +299,6 @@ int main(void)
   /* Initialize all configured peripherals */
 //  MX_GPIO_Init();
   MX_USART2_UART_Init();
-
   /* USER CODE BEGIN 2 */
 
   PortIO_Clock(&Current_Port);
@@ -348,7 +326,9 @@ while (1)
 		 }
 		 else if(Rx_data[3]==4){
 			 Port_read_value(&Current_Port);
-			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),7000);
+			 HAL_Delay(1000);
+			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);
+			 HAL_Delay(1000);
 
 		 }
 

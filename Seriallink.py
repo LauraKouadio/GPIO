@@ -136,6 +136,10 @@ while True:
                 print(CurrentPort.Trame)
                 serialInst.write(CurrentPort.Trame)
                 time.sleep(5)
+                if(CurrentPort.Direction==4):
+                    print("Waiting for something to arrive...")
+                    packet = serialInst.readline()
+                    print(packet)
 
             case("Error, the Direction is incorrect."):
                 print(CurrentPort.Message)
