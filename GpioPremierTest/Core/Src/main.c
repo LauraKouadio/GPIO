@@ -41,8 +41,8 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 uint8_t check;
-volatile uint8_t Rx_data[5]={0}; //{18,18,10,4,3};{0};
-volatile uint8_t Tx_data[6]="Laura\n";
+volatile uint8_t Rx_data[5]= {0};//{18,18,10,4,3}; //{0};
+volatile uint8_t Tx_data[6];
 struct PortIO Current_Port;
 
 
@@ -65,6 +65,7 @@ struct PortIO
 	uint32_t val;            //ok avec utilisateur
 	uint32_t portLetter;     //ok avec utilisateur
 	uint32_t actual_direction;
+	uint32_t actual_value;
 
 	volatile uint32_t *clock_for_gpio; //ok dans gpio init
 	volatile uint32_t *portAdressCrl; //ok dans gpio init
@@ -120,16 +121,37 @@ void Port_set_numPin(struct PortIO* _this, uint32_t NumPin){
 
 void Port_read_value(struct PortIO* _this){
 
-	_this->actual_direction = *(_this->portAdressOdr) & (1<<_this->numPin);
-	if(_this->actual_direction == (1<<_this->numPin)){
-		//Tx_data[0]=1;
+	_this->actual_value = *(_this->portAdressOdr) & (1<<_this->numPin);
+	if(_this->actual_value == (1<<_this->numPin)){
+		Tx_data[0]=1;
 	}
 	else{
-		//Tx_data[0]=0;
+		Tx_data[0]=65;
 	}
-
+	Rx_data[3]==-1;
 
 }
+
+void Port_read_direction(struct PortIO* _this){
+
+	if(_this->numPin >=8){
+		/*Tx_data[1]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+3-32)))))[4*(_this->numPin+3-32)];
+		Tx_data[2]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+2-32)))))[4*(_this->numPin+2-32)];
+		Tx_data[3]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+1-32)))))[4*(_this->numPin+1-32)];
+		Tx_data[4]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin-32)))))[4*(_this->numPin-32)];
+
+
+	}
+	else{
+		Tx_data[1]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+3)))))[4*(_this->numPin+3)];
+		Tx_data[2]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+2)))))[4*(_this->numPin+2)];
+		Tx_data[3]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+1)))))[4*(_this->numPin+1)];
+		Tx_data[4]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin)))))[4*(_this->numPin)];*/
+
+	}
+
+}
+
 
 void Port_set_direction(struct PortIO* _this)
 {
@@ -308,7 +330,7 @@ int main(void)
 
 while (1)
   {
-	 HAL_UART_Receive(&huart2, Rx_data,5,7000);
+	HAL_UART_Receive(&huart2, Rx_data,5,7000);
 
 	 if(Rx_data[0]==18 && Rx_data[1]==18){
 
@@ -326,7 +348,6 @@ while (1)
 		 }
 		 else if(Rx_data[3]==4){
 			 Port_read_value(&Current_Port);
-			 HAL_Delay(1000);
 			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);
 			 HAL_Delay(1000);
 

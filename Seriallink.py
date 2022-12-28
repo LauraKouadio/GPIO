@@ -86,6 +86,7 @@ class PortConfiguration:
 #Lien série avec la carte
 
 serialInst=serial.Serial('COM6',115200)
+serialInst.timeout =1
 
 while True:
     CommandInput= input("""Hello! Enter the desire command among these ones:\n 
@@ -135,12 +136,15 @@ while True:
                 CurrentPort.Prepare_trame()
                 print(CurrentPort.Trame)
                 serialInst.write(CurrentPort.Trame)
-                time.sleep(5)
+                time.sleep(1)
                 if(CurrentPort.Direction==4):
                     print("Waiting for something to arrive...")
                     packet = serialInst.readline()
-                    print(packet)
-
+                    print(packet.decode("utf-8"))
+                    print("The type of packet is: ", type(packet.decode("utf-8")))
+                    print("The len of packet is: ", len(packet.decode("utf-8")))
+                    print("The first character of packet is: ",type(ord((packet.decode("utf-8"))[0]) ))
+                   
             case("Error, the Direction is incorrect."):
                 print(CurrentPort.Message)
             
