@@ -44,7 +44,7 @@ uint8_t check;
 uint32_t test_direction;
 
 
-volatile uint8_t Rx_data[5]={0}; //{18,18,10,4,3}; //{0};
+volatile uint8_t Rx_data[5]= {0};//{18,18,4,4,2}; //{0};
 volatile uint8_t Tx_data[6];//{0,1,0,1,0};//,67,68,69,70};
 struct PortIO Current_Port;
 
@@ -176,7 +176,7 @@ void Port_read_direction(struct PortIO* _this){
 	else{
 
 		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+3));
-		if(test_direction == (_this->numPin)){
+		if(test_direction == (1<<(4*(_this-> numPin)+3))){
 			Tx_data[1]=1;
 		}
 		else{
@@ -184,7 +184,7 @@ void Port_read_direction(struct PortIO* _this){
 		}
 
 		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+2));
-		if(test_direction == (_this->numPin)){
+		if(test_direction == (1<<(4*(_this-> numPin)+2))){
 			Tx_data[2]=1;
 			}
 		else{
@@ -192,7 +192,7 @@ void Port_read_direction(struct PortIO* _this){
 			}
 
 		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+1));
-		if(test_direction == (_this->numPin)){
+		if(test_direction == (1<<(4*(_this-> numPin)+1))){
 			Tx_data[3]=1;
 				}
 		else{
@@ -200,7 +200,7 @@ void Port_read_direction(struct PortIO* _this){
 				}
 
 		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)));
-		if(test_direction == (_this->numPin)){
+		if(test_direction == (1<<(4*(_this-> numPin)))){
 			Tx_data[4]=1;
 				}
 		else{
