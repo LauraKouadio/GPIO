@@ -41,8 +41,11 @@
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
 uint8_t check;
-volatile uint8_t Rx_data[5]= {0};//{18,18,10,4,3}; //{0};
-volatile uint8_t Tx_data[6];
+uint32_t test_direction;
+
+
+volatile uint8_t Rx_data[5]={0}; //{18,18,10,4,3}; //{0};
+volatile uint8_t Tx_data[6];//{0,1,0,1,0};//,67,68,69,70};
 struct PortIO Current_Port;
 
 
@@ -126,28 +129,93 @@ void Port_read_value(struct PortIO* _this){
 		Tx_data[0]=1;
 	}
 	else{
-		Tx_data[0]=65;
+		Tx_data[0]=0;
 	}
-	Rx_data[3]==-1;
+	//Rx_data[3]=-1;
 
 }
 
 void Port_read_direction(struct PortIO* _this){
 
-	if(_this->numPin >=8){
-		/*Tx_data[1]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+3-32)))))[4*(_this->numPin+3-32)];
-		Tx_data[2]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+2-32)))))[4*(_this->numPin+2-32)];
-		Tx_data[3]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin+1-32)))))[4*(_this->numPin+1-32)];
-		Tx_data[4]= ((char *) (*(_this->portAdressCrh) & (1<<(4*(_this-> numPin-32)))))[4*(_this->numPin-32)];
 
+	if(_this->numPin >=8){
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+3-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+3-32))){
+			Tx_data[1]=1;
+		}
+		else{
+			Tx_data[1]=0;
+		}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+2-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+2-32))){
+			Tx_data[2]=1;
+			}
+		else{
+			Tx_data[2]=0;
+			}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+1-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+1-32))){
+			Tx_data[3]=1;
+				}
+		else{
+			Tx_data[3]=0;
+				}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)-32));
+		if(test_direction == (1<<(4*(_this-> numPin)-32))){
+			Tx_data[4]=1;
+				}
+		else{
+			Tx_data[4]=0;
+				}
 
 	}
 	else{
-		Tx_data[1]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+3)))))[4*(_this->numPin+3)];
-		Tx_data[2]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+2)))))[4*(_this->numPin+2)];
-		Tx_data[3]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin+1)))))[4*(_this->numPin+1)];
-		Tx_data[4]= ((char *) (*(_this->portAdressCrl) & (1<<(4*(_this-> numPin)))))[4*(_this->numPin)];*/
 
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+3));
+		if(test_direction == (_this->numPin)){
+			Tx_data[1]=1;
+		}
+		else{
+			Tx_data[1]=0;
+		}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+2));
+		if(test_direction == (_this->numPin)){
+			Tx_data[2]=1;
+			}
+		else{
+			Tx_data[2]=0;
+			}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+1));
+		if(test_direction == (_this->numPin)){
+			Tx_data[3]=1;
+				}
+		else{
+			Tx_data[3]=0;
+				}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)));
+		if(test_direction == (_this->numPin)){
+			Tx_data[4]=1;
+				}
+		else{
+			Tx_data[4]=0;
+				}
+
+		//test_direction = *(_this->portAdressCrl) & (1<<(4*((_this-> numPin)+3)));
+		//Tx_data[1]= *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+3));
+		//test_direction = *(_this->portAdressCrl) & (1<<(4*((_this-> numPin)+2)));
+		//Tx_data[2]=*(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+2));
+		//test_direction = *(_this->portAdressCrl) & (1<<(4*((_this-> numPin)+1)));
+		//Tx_data[3]= *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+1));
+		//test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)));
+		//Tx_data[4]= *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)));
+		//Rx_data[3]= -1;
 	}
 
 }
@@ -189,13 +257,13 @@ void Port_set_direction(struct PortIO* _this)
 		 //config MODE
 		 if(_this-> numPin >=8){
 
-	 	   decalage_0 = ~(1 << (4*(_this-> numPin)-32));
+	 	   decalage_0 = ~(1 << (4*(_this-> numPin)+1-32));
 	 	   decalage_1 = ~(1 << (4*(_this-> numPin)-32));
 
 		   _this->actual_direction = _this->actual_direction & decalage_0;
 		   _this->actual_direction = _this->actual_direction & decalage_1;
 
-		   *(_this->portAdressCrl) = _this->actual_direction;
+		   *(_this->portAdressCrh) = _this->actual_direction;
 		 }
 
 		 else{
@@ -281,6 +349,7 @@ void Port_set_value(struct PortIO* _this){
 
  	 else if (_this->val ==2){ //Commande ON
         //LED on
+ 		 //Vérifier que le GPIO est en mode output!!
  		*(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
 
  	 }
@@ -330,6 +399,7 @@ int main(void)
 
 while (1)
   {
+
 	HAL_UART_Receive(&huart2, Rx_data,5,7000);
 
 	 if(Rx_data[0]==18 && Rx_data[1]==18){
@@ -348,7 +418,9 @@ while (1)
 		 }
 		 else if(Rx_data[3]==4){
 			 Port_read_value(&Current_Port);
+			 Port_read_direction(&Current_Port);
 			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);
+			 Rx_data[3]=-1;
 			 HAL_Delay(1000);
 
 		 }

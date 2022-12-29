@@ -17,6 +17,7 @@ class PortConfiguration:
         self.PortLetterCode=0
         self.Trame=0
         self.Message ='Ready to send'
+        self.Receive=[0,0,0,0,0]
     def Handle_modeOrState(self):
 
         match(self.modeOrState):
@@ -137,14 +138,34 @@ while True:
                 print(CurrentPort.Trame)
                 serialInst.write(CurrentPort.Trame)
                 time.sleep(1)
+
                 if(CurrentPort.Direction==4):
                     print("Waiting for something to arrive...")
                     packet = serialInst.readline()
-                    print(packet.decode("utf-8"))
-                    print("The type of packet is: ", type(packet.decode("utf-8")))
-                    print("The len of packet is: ", len(packet.decode("utf-8")))
-                    print("The first character of packet is: ",type(ord((packet.decode("utf-8"))[0]) ))
-                   
+                    print(ord((packet.decode("utf-8"))[0]))
+                    print(ord((packet.decode("utf-8"))[1]))
+                    print(ord((packet.decode("utf-8"))[2]))
+                    print(ord((packet.decode("utf-8"))[3]))
+                    print(ord((packet.decode("utf-8"))[4]))
+                    
+                    CurrentPort.Receive[0]=ord((packet.decode("utf-8"))[0])
+                    CurrentPort.Receive[1]=ord((packet.decode("utf-8"))[1])
+                    CurrentPort.Receive[2]=ord((packet.decode("utf-8"))[2])
+                    CurrentPort.Receive[3]=ord((packet.decode("utf-8"))[3])
+                    CurrentPort.Receive[4]=ord((packet.decode("utf-8"))[4])
+
+                    match(CurrentPort.Receive):
+                        case [0,0,0,0,0]:
+                            print("This GPIO is in mode INPUT. Its value is equal to 0.")
+                        case [0,0,0,0,1]:
+                            print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 0.")
+                        case [1,0,0,0,1]:
+                            print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 1.")
+
+
+                    print(CurrentPort.Receive)
+                    
+                    
             case("Error, the Direction is incorrect."):
                 print(CurrentPort.Message)
             
