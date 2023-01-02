@@ -18,6 +18,7 @@ class PortConfiguration:
         self.Trame=0
         self.Message ='Ready to send'
         self.Receive=[0,0,0,0,0]
+
     def Handle_modeOrState(self):
 
         match(self.modeOrState):
@@ -81,6 +82,59 @@ class PortConfiguration:
         self.Trame = key_start_1 + key_start_1  + PinNumber+ Direction + PortLetterCode 
         #return(trame) 
 
+    def Decode_received(self):
+        packet = serialInst.readline()
+        print(ord((packet.decode("utf-8"))[0]))
+        print(ord((packet.decode("utf-8"))[1]))
+        print(ord((packet.decode("utf-8"))[2]))
+        print(ord((packet.decode("utf-8"))[3]))
+        print(ord((packet.decode("utf-8"))[4]))
+        
+        CurrentPort.Receive[0]=ord((packet.decode("utf-8"))[0])
+        CurrentPort.Receive[1]=ord((packet.decode("utf-8"))[1])
+        CurrentPort.Receive[2]=ord((packet.decode("utf-8"))[2])
+        CurrentPort.Receive[3]=ord((packet.decode("utf-8"))[3])
+        CurrentPort.Receive[4]=ord((packet.decode("utf-8"))[4])
+
+        match(CurrentPort.Receive):
+            case [0,0,0,0,0]:
+                print("This GPIO is in mode INPUT. Its value is equal to 0.")
+            case [0,0,0,0,1]:
+                print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 0.")
+            case [1,0,0,0,1]:
+                print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 1.")
+
+            case [3,3,3,3,3]:
+                print("You are trying to set the value 'ON' to a GPIO which is not in output mode. Turn the mode to output mode and try again.")
+
+
+        print(CurrentPort.Receive)
+
+    def PortConfig(self,CommandInput):
+        [Type,PointSeparator,Remain] = CommandInput.partition('.')
+        [PortLetter,PointSeparator,Remain] = Remain.partition('.')
+        [PinNumber,PointSeparator,Remain]=Remain.partition('.')
+        [Action,EqualSeparator,ModeOrState] = Remain.partition('=')
+
+
+        if(Action =="val?"):
+            
+            [Action,QuestionSeparator,Void] = Action.partition('?')   
+            CurrentPort.type = Type
+            CurrentPort.portLetter=PortLetter
+            CurrentPort.pinNum=PinNumber
+            CurrentPort.action=Action
+            CurrentPort.modeOrState= QuestionSeparator
+
+
+        else:
+            CurrentPort.type = Type
+            CurrentPort.portLetter=PortLetter
+            CurrentPort.pinNum=PinNumber
+            CurrentPort.action=Action
+            CurrentPort.modeOrState= ModeOrState
+
+
 
 
             
@@ -96,29 +150,7 @@ while True:
 - io.PortLetter.CurrentPort.pinNumber.val? to read the value of the pin\n""") 
     
     CurrentPort = PortConfiguration()
-
-    [Type,PointSeparator,Remain] = CommandInput.partition('.')
-    [PortLetter,PointSeparator,Remain] = Remain.partition('.')
-    [PinNumber,PointSeparator,Remain]=Remain.partition('.')
-    [Action,EqualSeparator,ModeOrState] = Remain.partition('=')
-
-
-    if(Action =="val?"):
-      
-        [Action,QuestionSeparator,Void] = Action.partition('?')   
-        CurrentPort.type = Type
-        CurrentPort.portLetter=PortLetter
-        CurrentPort.pinNum=PinNumber
-        CurrentPort.action=Action
-        CurrentPort.modeOrState= QuestionSeparator
-
-    
-    else:
-        CurrentPort.type = Type
-        CurrentPort.portLetter=PortLetter
-        CurrentPort.pinNum=PinNumber
-        CurrentPort.action=Action
-        CurrentPort.modeOrState= ModeOrState
+    CurrentPort.PortConfig(CommandInput)
 
 
 #Current Port Handle
@@ -141,30 +173,15 @@ while True:
 
                 if(CurrentPort.Direction==4):
                     print("Waiting for something to arrive...")
-                    packet = serialInst.readline()
-                    print(ord((packet.decode("utf-8"))[0]))
-                    print(ord((packet.decode("utf-8"))[1]))
-                    print(ord((packet.decode("utf-8"))[2]))
-                    print(ord((packet.decode("utf-8"))[3]))
-                    print(ord((packet.decode("utf-8"))[4]))
-                    
-                    CurrentPort.Receive[0]=ord((packet.decode("utf-8"))[0])
-                    CurrentPort.Receive[1]=ord((packet.decode("utf-8"))[1])
-                    CurrentPort.Receive[2]=ord((packet.decode("utf-8"))[2])
-                    CurrentPort.Receive[3]=ord((packet.decode("utf-8"))[3])
-                    CurrentPort.Receive[4]=ord((packet.decode("utf-8"))[4])
+                    CurrentPort.Decode_received()
 
-                    match(CurrentPort.Receive):
-                        case [0,0,0,0,0]:
-                            print("This GPIO is in mode INPUT. Its value is equal to 0.")
-                        case [0,0,0,0,1]:
-                            print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 0.")
-                        case [1,0,0,0,1]:
-                            print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 1.")
+                elif(CurrentPort.Direction==2):
+                    print("Waiting for something to arrive...")
+                    CurrentPort.Decode_received()
 
-
-                    print(CurrentPort.Receive)
-                    
+                elif(CurrentPort.Direction==3):
+                    print("Waiting for something to arrive...")
+                    CurrentPort.Decode_received()
                     
             case("Error, the Direction is incorrect."):
                 print(CurrentPort.Message)
