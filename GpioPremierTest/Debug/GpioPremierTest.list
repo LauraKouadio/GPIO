@@ -27,23 +27,23 @@ Idx Name          Size      VMA       LMA       File off  Algn
                   ALLOC
  11 .ARM.attributes 00000029  00000000  00000000  0002000c  2**0
                   CONTENTS, READONLY
- 12 .debug_info   00005f71  00000000  00000000  00020035  2**0
+ 12 .debug_info   00005f2a  00000000  00000000  00020035  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 13 .debug_abbrev 0000154d  00000000  00000000  00025fa6  2**0
+ 13 .debug_abbrev 0000154d  00000000  00000000  00025f5f  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 14 .debug_aranges 000006c8  00000000  00000000  000274f8  2**3
+ 14 .debug_aranges 000006c0  00000000  00000000  000274b0  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 15 .debug_ranges 00000650  00000000  00000000  00027bc0  2**3
+ 15 .debug_ranges 00000648  00000000  00000000  00027b70  2**3
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 16 .debug_macro  00015f0c  00000000  00000000  00028210  2**0
+ 16 .debug_macro  00015f0c  00000000  00000000  000281b8  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 17 .debug_line   0000737e  00000000  00000000  0003e11c  2**0
+ 17 .debug_line   00007362  00000000  00000000  0003e0c4  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 18 .debug_str    0007e3f1  00000000  00000000  0004549a  2**0
+ 18 .debug_str    0007e3db  00000000  00000000  00045426  2**0
                   CONTENTS, READONLY, DEBUGGING, OCTETS
- 19 .comment      00000050  00000000  00000000  000c388b  2**0
+ 19 .comment      00000050  00000000  00000000  000c3801  2**0
                   CONTENTS, READONLY
- 20 .debug_frame  00001a74  00000000  00000000  000c38dc  2**2
+ 20 .debug_frame  00001a4c  00000000  00000000  000c3854  2**2
                   CONTENTS, READONLY, DEBUGGING, OCTETS
 
 Disassembly of section .text:
@@ -77,11 +77,11 @@ Disassembly of section .text:
  8000148:	0800275c 	.word	0x0800275c
 
 0800014c <read_register>:
-struct PortIO Current_Port;
 
 #define FALSE (1==0)
 #define TRUE  (1==1)
 
+/// Function read register: Used to read the value of a register
 uint32_t read_register( volatile uint32_t *register_to_read){
  800014c:	b480      	push	{r7}
  800014e:	b085      	sub	sp, #20
@@ -105,6 +105,8 @@ uint32_t read_register( volatile uint32_t *register_to_read){
 
 08000168 <Is_the_mode_output>:
 
+
+/// Function "Is the mode output" returns TRUE if the GPIO is in mode output push pull, FALSE otherwise.
 uint8_t Is_the_mode_output(){
  8000168:	b480      	push	{r7}
  800016a:	b083      	sub	sp, #12
@@ -153,11 +155,11 @@ uint8_t Is_the_mode_output(){
  80001b0:	20000078 	.word	0x20000078
 
 080001b4 <PortIO_Clock>:
-	volatile uint32_t *portAdressCrl; //ok dans gpio init
-	volatile uint32_t *portAdressCrh; //ok dans gpio init
-	volatile uint32_t *portAdressOdr; //ok dans gpio init
+	volatile uint32_t *portAdressCrh;
+	volatile uint32_t *portAdressOdr;
 };
 
+///Function Port IO Clock: Activates the clocks of port A,B,C,D,E, F and G
 void PortIO_Clock(struct PortIO* _this){
  80001b4:	b480      	push	{r7}
  80001b6:	b083      	sub	sp, #12
@@ -194,6 +196,8 @@ void PortIO_Clock(struct PortIO* _this){
 
 080001ec <PortIO_init>:
 
+
+///Function Port IO init: Initializes the structURE PortIO with the required adresses according to the chosen port letter.
 void PortIO_init(struct PortIO* _this)
 {
  80001ec:	b480      	push	{r7}
@@ -301,11 +305,11 @@ void PortIO_init(struct PortIO* _this)
  800029c:	4001140c 	.word	0x4001140c
 
 080002a0 <Port_read_value>:
-void Port_set_numPin(struct PortIO* _this, uint32_t NumPin){
 	_this->numPin=NumPin;
 
-}
+} */
 
+///Function Port read value: Reads the GPIO output register of a specified pin and store it in Tx_data[0]
 void Port_read_value(struct PortIO* _this){
  80002a0:	b480      	push	{r7}
  80002a2:	b083      	sub	sp, #12
@@ -357,6 +361,7 @@ void Port_read_value(struct PortIO* _this){
 
 080002ec <Port_read_direction>:
 
+///Function Port read direction: Reads the mode of an IO and store it the table Tx_data, from Tx_data[1] to Tx_data[4]
 void Port_read_direction(struct PortIO* _this){
  80002ec:	b480      	push	{r7}
  80002ee:	b083      	sub	sp, #12
@@ -364,7 +369,7 @@ void Port_read_direction(struct PortIO* _this){
  80002f2:	6078      	str	r0, [r7, #4]
 
 
-	if(_this->numPin >=8){
+	if(_this->numPin >=8){ //The mode of the I/O is coded in the register GPIOx_CRH
  80002f4:	687b      	ldr	r3, [r7, #4]
  80002f6:	689b      	ldr	r3, [r3, #8]
  80002f8:	2b07      	cmp	r3, #7
@@ -667,7 +672,7 @@ void Port_read_direction(struct PortIO* _this){
 
 08000508 <Port_set_direction>:
 
-
+///Function Port set direction: Set the direction of the GPIO (Output push-pull or Analog input)
 void Port_set_direction(struct PortIO* _this)
 {
  8000508:	b580      	push	{r7, lr}
@@ -982,7 +987,7 @@ void Port_set_direction(struct PortIO* _this)
  800073c:	401a      	ands	r2, r3
  800073e:	687b      	ldr	r3, [r7, #4]
  8000740:	615a      	str	r2, [r3, #20]
-		 	*(_this->portAdressCrh) = _this->actual_direction; //*(_this->portAdressCrh) & _this->actual_direction;
+		 	*(_this->portAdressCrh) = _this->actual_direction;
  8000742:	687b      	ldr	r3, [r7, #4]
  8000744:	6a5b      	ldr	r3, [r3, #36]	; 0x24
  8000746:	687a      	ldr	r2, [r7, #4]
@@ -1020,7 +1025,7 @@ void Port_set_direction(struct PortIO* _this)
  8000780:	401a      	ands	r2, r3
  8000782:	687b      	ldr	r3, [r7, #4]
  8000784:	615a      	str	r2, [r3, #20]
-		 	*(_this->portAdressCrl) = _this->actual_direction; //*(_this->portAdressCrl) & _this->actual_direction;
+		 	*(_this->portAdressCrl) = _this->actual_direction;
  8000786:	687b      	ldr	r3, [r7, #4]
  8000788:	6a1b      	ldr	r3, [r3, #32]
  800078a:	687a      	ldr	r2, [r7, #4]
@@ -1036,7 +1041,7 @@ void Port_set_direction(struct PortIO* _this)
 	...
 
 0800079c <Port_set_value>:
-
+///Function Port set value: Sets the value of an I/O to 0 or 1, ONLY if the I/O is in output mode
 void Port_set_value(struct PortIO* _this){
  800079c:	b580      	push	{r7, lr}
  800079e:	b08a      	sub	sp, #40	; 0x28
@@ -1072,54 +1077,54 @@ void Port_set_value(struct PortIO* _this){
  80007dc:	3304      	adds	r3, #4
  80007de:	7019      	strb	r1, [r3, #0]
 
- 	if(_this->val ==3){ //Commande off
- 80007e0:	687b      	ldr	r3, [r7, #4]
- 80007e2:	68db      	ldr	r3, [r3, #12]
- 80007e4:	2b03      	cmp	r3, #3
- 80007e6:	d112      	bne.n	800080e <Port_set_value+0x72>
+ 	Port_read_direction(_this);
+ 80007e0:	6878      	ldr	r0, [r7, #4]
+ 80007e2:	f7ff fd83 	bl	80002ec <Port_read_direction>
+ 	if(Is_the_mode_output(Tx_data)==TRUE){
+ 80007e6:	4822      	ldr	r0, [pc, #136]	; (8000870 <Port_set_value+0xd4>)
+ 80007e8:	f7ff fcbe 	bl	8000168 <Is_the_mode_output>
+ 80007ec:	4603      	mov	r3, r0
+ 80007ee:	2b01      	cmp	r3, #1
+ 80007f0:	d12a      	bne.n	8000848 <Port_set_value+0xac>
 
- 		//LED off
- 		decalage_1 = decalage_1 ^ 0xFFFFFFFF;
- 80007e8:	6a7b      	ldr	r3, [r7, #36]	; 0x24
- 80007ea:	43db      	mvns	r3, r3
- 80007ec:	627b      	str	r3, [r7, #36]	; 0x24
- 		*(_this->portAdressOdr) = *(_this->portAdressOdr) & decalage_1;
- 80007ee:	687b      	ldr	r3, [r7, #4]
- 80007f0:	6a9b      	ldr	r3, [r3, #40]	; 0x28
- 80007f2:	6819      	ldr	r1, [r3, #0]
- 80007f4:	687b      	ldr	r3, [r7, #4]
- 80007f6:	6a9b      	ldr	r3, [r3, #40]	; 0x28
- 80007f8:	6a7a      	ldr	r2, [r7, #36]	; 0x24
- 80007fa:	400a      	ands	r2, r1
- 80007fc:	601a      	str	r2, [r3, #0]
- 		 HAL_UART_Transmit(&huart2,off,sizeof(off),100);
- 80007fe:	f107 010c 	add.w	r1, r7, #12
- 8000802:	2364      	movs	r3, #100	; 0x64
- 8000804:	2205      	movs	r2, #5
- 8000806:	481a      	ldr	r0, [pc, #104]	; (8000870 <Port_set_value+0xd4>)
- 8000808:	f001 fa4f 	bl	8001caa <HAL_UART_Transmit>
- 			 Rx_data[3]=-1;
+		if(_this->val ==3){ // I/O OFF (0)
+ 80007f2:	687b      	ldr	r3, [r7, #4]
+ 80007f4:	68db      	ldr	r3, [r3, #12]
+ 80007f6:	2b03      	cmp	r3, #3
+ 80007f8:	d112      	bne.n	8000820 <Port_set_value+0x84>
+			//LED off
+			decalage_1 = decalage_1 ^ 0xFFFFFFFF;
+ 80007fa:	6a7b      	ldr	r3, [r7, #36]	; 0x24
+ 80007fc:	43db      	mvns	r3, r3
+ 80007fe:	627b      	str	r3, [r7, #36]	; 0x24
+			*(_this->portAdressOdr) = *(_this->portAdressOdr) & decalage_1;
+ 8000800:	687b      	ldr	r3, [r7, #4]
+ 8000802:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+ 8000804:	6819      	ldr	r1, [r3, #0]
+ 8000806:	687b      	ldr	r3, [r7, #4]
+ 8000808:	6a9b      	ldr	r3, [r3, #40]	; 0x28
+ 800080a:	6a7a      	ldr	r2, [r7, #36]	; 0x24
+ 800080c:	400a      	ands	r2, r1
+ 800080e:	601a      	str	r2, [r3, #0]
+			 HAL_UART_Transmit(&huart2,off,sizeof(off),100);
+ 8000810:	f107 010c 	add.w	r1, r7, #12
+ 8000814:	2364      	movs	r3, #100	; 0x64
+ 8000816:	2205      	movs	r2, #5
+ 8000818:	4816      	ldr	r0, [pc, #88]	; (8000874 <Port_set_value+0xd8>)
+ 800081a:	f001 fa46 	bl	8001caa <HAL_UART_Transmit>
+	else{
+ 		HAL_UART_Transmit(&huart2,error,sizeof(error),100);
+ 		Rx_data[3]=-1;
  		 }
 
  	 }
-
-}
- 800080c:	e026      	b.n	800085c <Port_set_value+0xc0>
- 	 else if (_this->val ==2){ //Commande ON
- 800080e:	687b      	ldr	r3, [r7, #4]
- 8000810:	68db      	ldr	r3, [r3, #12]
- 8000812:	2b02      	cmp	r3, #2
- 8000814:	d122      	bne.n	800085c <Port_set_value+0xc0>
- 		 Port_read_direction(_this);
- 8000816:	6878      	ldr	r0, [r7, #4]
- 8000818:	f7ff fd68 	bl	80002ec <Port_read_direction>
- 		 if(Is_the_mode_output(Tx_data)==TRUE){
- 800081c:	4815      	ldr	r0, [pc, #84]	; (8000874 <Port_set_value+0xd8>)
- 800081e:	f7ff fca3 	bl	8000168 <Is_the_mode_output>
- 8000822:	4603      	mov	r3, r0
- 8000824:	2b01      	cmp	r3, #1
- 8000826:	d10f      	bne.n	8000848 <Port_set_value+0xac>
- 			*(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
+ 800081e:	e01d      	b.n	800085c <Port_set_value+0xc0>
+		else if(_this->val ==2){ // I/O ON (1)
+ 8000820:	687b      	ldr	r3, [r7, #4]
+ 8000822:	68db      	ldr	r3, [r3, #12]
+ 8000824:	2b02      	cmp	r3, #2
+ 8000826:	d119      	bne.n	800085c <Port_set_value+0xc0>
+			 *(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
  8000828:	687b      	ldr	r3, [r7, #4]
  800082a:	6a9b      	ldr	r3, [r3, #40]	; 0x28
  800082c:	6819      	ldr	r1, [r3, #0]
@@ -1128,25 +1133,25 @@ void Port_set_value(struct PortIO* _this){
  8000832:	6a7a      	ldr	r2, [r7, #36]	; 0x24
  8000834:	430a      	orrs	r2, r1
  8000836:	601a      	str	r2, [r3, #0]
- 			HAL_UART_Transmit(&huart2,on,sizeof(on),100);
+			 HAL_UART_Transmit(&huart2,on,sizeof(on),100);
  8000838:	f107 0114 	add.w	r1, r7, #20
  800083c:	2364      	movs	r3, #100	; 0x64
  800083e:	2205      	movs	r2, #5
- 8000840:	480b      	ldr	r0, [pc, #44]	; (8000870 <Port_set_value+0xd4>)
+ 8000840:	480c      	ldr	r0, [pc, #48]	; (8000874 <Port_set_value+0xd8>)
  8000842:	f001 fa32 	bl	8001caa <HAL_UART_Transmit>
-}
+ 	 }
  8000846:	e009      	b.n	800085c <Port_set_value+0xc0>
- 			 HAL_UART_Transmit(&huart2,error,sizeof(error),100);
+ 		HAL_UART_Transmit(&huart2,error,sizeof(error),100);
  8000848:	f107 011c 	add.w	r1, r7, #28
  800084c:	2364      	movs	r3, #100	; 0x64
  800084e:	2205      	movs	r2, #5
- 8000850:	4807      	ldr	r0, [pc, #28]	; (8000870 <Port_set_value+0xd4>)
+ 8000850:	4808      	ldr	r0, [pc, #32]	; (8000874 <Port_set_value+0xd8>)
  8000852:	f001 fa2a 	bl	8001caa <HAL_UART_Transmit>
- 			 Rx_data[3]=-1;
+ 		Rx_data[3]=-1;
  8000856:	4b08      	ldr	r3, [pc, #32]	; (8000878 <Port_set_value+0xdc>)
  8000858:	22ff      	movs	r2, #255	; 0xff
  800085a:	70da      	strb	r2, [r3, #3]
-}
+ 	 }
  800085c:	bf00      	nop
  800085e:	3728      	adds	r7, #40	; 0x28
  8000860:	46bd      	mov	sp, r7
@@ -1154,8 +1159,8 @@ void Port_set_value(struct PortIO* _this){
  8000864:	08002774 	.word	0x08002774
  8000868:	0800277c 	.word	0x0800277c
  800086c:	08002784 	.word	0x08002784
- 8000870:	20000028 	.word	0x20000028
- 8000874:	20000078 	.word	0x20000078
+ 8000870:	20000078 	.word	0x20000078
+ 8000874:	20000028 	.word	0x20000028
  8000878:	20000070 	.word	0x20000070
 
 0800087c <main>:
@@ -1228,7 +1233,7 @@ while (1)
  80008c6:	461a      	mov	r2, r3
  80008c8:	4b23      	ldr	r3, [pc, #140]	; (8000958 <main+0xdc>)
  80008ca:	609a      	str	r2, [r3, #8]
-		 PortIO_init(&Current_Port); //Adresses correspondantes au port choisi
+		 PortIO_init(&Current_Port);
  80008cc:	4822      	ldr	r0, [pc, #136]	; (8000958 <main+0xdc>)
  80008ce:	f7ff fc8d 	bl	80001ec <PortIO_init>
 

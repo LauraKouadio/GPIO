@@ -40,7 +40,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 UART_HandleTypeDef huart2;
-uint8_t check;
 uint32_t test_direction;
 
 
@@ -51,6 +50,7 @@ struct PortIO Current_Port;
 #define FALSE (1==0)
 #define TRUE  (1==1)
 
+/// Function read register: Used to read the value of a register
 uint32_t read_register( volatile uint32_t *register_to_read){
 
   uint32_t tmp = *register_to_read;
@@ -58,6 +58,8 @@ uint32_t read_register( volatile uint32_t *register_to_read){
 
  }
 
+
+/// Function "Is the mode output" returns TRUE if the GPIO is in mode output push pull, FALSE otherwise.
 uint8_t Is_the_mode_output(){
 	uint8_t L[4] ={0,0,0,1};
 
@@ -73,20 +75,21 @@ uint8_t Is_the_mode_output(){
 struct PortIO
 {
 
-	uint32_t active_clock;   //ok dans gpio init
-	uint32_t gpio_direction; //ok avec utilisateur
-	uint32_t numPin;         //ok avec utilisateur
-	uint32_t val;            //ok avec utilisateur
-	uint32_t portLetter;     //ok avec utilisateur
+	uint32_t active_clock;
+	uint32_t gpio_direction;
+	uint32_t numPin;
+	uint32_t val;
+	uint32_t portLetter;
 	uint32_t actual_direction;
 	uint32_t actual_value;
 
-	volatile uint32_t *clock_for_gpio; //ok dans gpio init
-	volatile uint32_t *portAdressCrl; //ok dans gpio init
-	volatile uint32_t *portAdressCrh; //ok dans gpio init
-	volatile uint32_t *portAdressOdr; //ok dans gpio init
+	volatile uint32_t *clock_for_gpio;
+	volatile uint32_t *portAdressCrl;
+	volatile uint32_t *portAdressCrh;
+	volatile uint32_t *portAdressOdr;
 };
 
+///Function Port IO Clock: Activates the clocks of port A,B,C,D,E, F and G
 void PortIO_Clock(struct PortIO* _this){
 	_this -> clock_for_gpio = (uint32_t*) 0x40021018;
 	_this -> active_clock = 0x1FC;
@@ -95,6 +98,8 @@ void PortIO_Clock(struct PortIO* _this){
 
 }
 
+
+///Function Port IO init: Initializes the structURE PortIO with the required adresses according to the chosen port letter.
 void PortIO_init(struct PortIO* _this)
 {
 
@@ -128,11 +133,8 @@ void PortIO_init(struct PortIO* _this)
 
 }
 
-void Port_set_numPin(struct PortIO* _this, uint32_t NumPin){
-	_this->numPin=NumPin;
 
-}
-
+///Function Port read value: Reads the GPIO output register of a specified pin and store it in Tx_data[0]
 void Port_read_value(struct PortIO* _this){
 
 	_this->actual_value = *(_this->portAdressOdr) & (1<<_this->numPin);
@@ -145,10 +147,11 @@ void Port_read_value(struct PortIO* _this){
 
 }
 
+///Function Port read direction: Reads the mode of an IO and store it the table Tx_data, from Tx_data[1] to Tx_data[4]
 void Port_read_direction(struct PortIO* _this){
 
 
-	if(_this->numPin >=8){
+	if(_this->numPin >=8){ //The mode of the I/O is coded in the register GPIOx_CRH
 
 		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+3-32));
 		if(test_direction == (1<<(4*(_this-> numPin)+3-32))){
@@ -183,7 +186,7 @@ void Port_read_direction(struct PortIO* _this){
 				}
 
 	}
-	else{
+	else{ //The mode of the I/O is coded in the register GPIOx_CRL
 
 		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+3));
 		if(test_direction == (1<<(4*(_this-> numPin)+3))){
@@ -221,17 +224,17 @@ void Port_read_direction(struct PortIO* _this){
 
 }
 
-
+///Function Port set direction: Set the direction of the GPIO (Output push-pull or Analog input)
 void Port_set_direction(struct PortIO* _this)
 {
 
 	switch(_this ->gpio_direction){
 
-	case 0: ;//input
+	case 0: ;//Set INPUT mode
 	 	 uint32_t decalage_0;
 	 	 uint32_t decalage_1;
 
-	 	  //config CNF5
+	 	  //config CNFy
 		 if(_this-> numPin >=8){
 		 	_this->actual_direction = read_register(_this->portAdressCrh);
 
@@ -255,7 +258,7 @@ void Port_set_direction(struct PortIO* _this)
 
 
 		 }
-		 //config MODE
+		 //config MODEy
 		 if(_this-> numPin >=8){
 
 	 	   decalage_0 = ~(1 << (4*(_this-> numPin)+1-32));
@@ -281,9 +284,9 @@ void Port_set_direction(struct PortIO* _this)
 
 		break;
 
-	case 1: ;//output
+	case 1: ;//Set OUTPUT mode
 
-	 	 //Config CNF5
+	 	 //Config CNFy
 	 	 if(_this-> numPin >=8){
 	 		_this->actual_direction = read_register(_this->portAdressCrh);
 
@@ -305,7 +308,7 @@ void Port_set_direction(struct PortIO* _this)
 
 	 	 }
 
-	 	 //Config MODE5
+	 	 //Config MODEy
 
 	 	if(_this-> numPin>=8){
 	 	 	decalage_1 = 1<<( 4*(_this-> numPin) -32 );
@@ -334,7 +337,7 @@ void Port_set_direction(struct PortIO* _this)
 
 
 }
-
+///Function Port set value: Sets the value of an I/O to 0 or 1, ONLY if the I/O is in output mode
 void Port_set_value(struct PortIO* _this){
 
 
@@ -343,30 +346,28 @@ void Port_set_value(struct PortIO* _this){
  	uint8_t on[5]={1,0,0,0,1};
  	uint8_t off[5]={0,0,0,0,1};
 
- 	if(_this->val ==3){ //Commande off
+ 	Port_read_direction(_this);
+ 	if(Is_the_mode_output(Tx_data)==TRUE){
 
- 		//LED off
- 		decalage_1 = decalage_1 ^ 0xFFFFFFFF;
- 		*(_this->portAdressOdr) = *(_this->portAdressOdr) & decalage_1;
- 		 HAL_UART_Transmit(&huart2,off,sizeof(off),100);
- 	  }
+		if(_this->val ==3){ // I/O OFF (0)
+			//LED off
+			decalage_1 = decalage_1 ^ 0xFFFFFFFF;
+			*(_this->portAdressOdr) = *(_this->portAdressOdr) & decalage_1;
+			 HAL_UART_Transmit(&huart2,off,sizeof(off),100);
+		  }
 
- 	 else if (_this->val ==2){ //Commande ON
-        //LED on
- 		 Port_read_direction(_this);
- 		 if(Is_the_mode_output(Tx_data)==TRUE){
-
- 			*(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
- 			HAL_UART_Transmit(&huart2,on,sizeof(on),100);
- 		 }
- 		 else{
- 			 HAL_UART_Transmit(&huart2,error,sizeof(error),100);
- 			 Rx_data[3]=-1;
+		else if(_this->val ==2){ // I/O ON (1)
+			//LED on
+			 *(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
+			 HAL_UART_Transmit(&huart2,on,sizeof(on),100);
+		 }
+ 	}
+	else{
+ 		HAL_UART_Transmit(&huart2,error,sizeof(error),100);
+ 		Rx_data[3]=-1;
  		 }
 
  	 }
-
-}
 
 
 void Port_free(struct PortIO* _this)
@@ -414,21 +415,21 @@ while (1)
 
 	HAL_UART_Receive(&huart2, Rx_data,5,7000);
 
-	 if(Rx_data[0]==18 && Rx_data[1]==18){
+	 if(Rx_data[0]==18 && Rx_data[1]==18){            //Beginning of a trame
 
 		 Current_Port.portLetter = Rx_data[4];
 		 Current_Port.numPin = Rx_data[2];
 		 PortIO_init(&Current_Port);
 
-		 if(Rx_data[3] == 2 || Rx_data[3] ==3){
+		 if(Rx_data[3] == 2 || Rx_data[3] ==3){      // Set the GPIO output to 0 or 1
 			 Current_Port.val = Rx_data[3];
 			 Port_set_value(&Current_Port);
 		 }
-		 else if (Rx_data[3]== 0 || Rx_data[3] ==1){
+		 else if (Rx_data[3]== 0 || Rx_data[3] ==1){ // Set the GPIO mode to input or output
 			 Current_Port.gpio_direction = Rx_data[3];
 			 Port_set_direction(&Current_Port);
 		 }
-		 else if(Rx_data[3]==4){
+		 else if(Rx_data[3]==4){                     // Reading the value of a GPIO
 			 Port_read_value(&Current_Port);
 			 Port_read_direction(&Current_Port);
 			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);

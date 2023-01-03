@@ -1,3 +1,13 @@
+#################################################################################################   STM32F103XX GPIO Driver ###########################################################################################
+# 
+# This driver allows the user to control the I/O, followinf a simple protocol.
+#   - The user enters a simple command
+#   - According to the command which has been entered, an instance of the class PortConfiguration is created and configured with the method PortConfig.
+#   - The methods Handle_modeOrState, Handle_PortLetter and Handle_PinNumber encode the configuration.
+#   - Unless an error has been detected, the method Prepare_trame will prepare a trame corresponding to the input command and send it to the STM32 board.
+#   - The STM32 will send back a message to confirm that the command has been executed properly. 
+# #
+
 import serial
 import time
 
@@ -36,7 +46,7 @@ class PortConfiguration:
 
             case "?":
                 self.Direction=4
-                print("Pin Number and Port well detected, input version")
+                
 
             case default:
                 self.Direction=-1
@@ -84,11 +94,6 @@ class PortConfiguration:
 
     def Decode_received(self):
         packet = serialInst.readline()
-        print(ord((packet.decode("utf-8"))[0]))
-        print(ord((packet.decode("utf-8"))[1]))
-        print(ord((packet.decode("utf-8"))[2]))
-        print(ord((packet.decode("utf-8"))[3]))
-        print(ord((packet.decode("utf-8"))[4]))
         
         CurrentPort.Receive[0]=ord((packet.decode("utf-8"))[0])
         CurrentPort.Receive[1]=ord((packet.decode("utf-8"))[1])
@@ -105,7 +110,13 @@ class PortConfiguration:
                 print("This GPIO is in mode OUTPUT PUSH PULL. Its value is equal to 1.")
 
             case [3,3,3,3,3]:
-                print("You are trying to set the value 'ON' to a GPIO which is not in output mode. Turn the mode to output mode and try again.")
+                print("You are trying to set the value 'ON' or 'OFF' to a GPIO which is not in output mode. Turn the mode to output mode and try again.")
+            
+            case [1,1,0,0,0]:
+                print("This GPIO is in mode Input pull up pull down with a value equal to 1.")
+
+            case [0,1,0,0,0]:
+                print("This GPIO is in mode Input pull up pull down with a value equal to 0.")
 
 
         print(CurrentPort.Receive)
