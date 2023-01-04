@@ -1,1 +1,1 @@
-# GPIO
+# GPIO driver for STM32F103xx
