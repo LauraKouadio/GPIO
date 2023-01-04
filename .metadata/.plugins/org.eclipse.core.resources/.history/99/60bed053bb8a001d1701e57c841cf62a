@@ -1,0 +1,590 @@
+/* USER CODE BEGIN Header */
+/**
+  ******************************************************************************
+  * @file           : main.c
+  * @brief          : Main program body
+  ******************************************************************************
+  * @attention
+  *
+  * Copyright (c) 2022 STMicroelectronics.
+  * All rights reserved.
+  *
+  * This software is licensed under terms that can be found in the LICENSE file
+  * in the root directory of this software component.
+  * If no LICENSE file comes with this software, it is provided AS-IS.
+  *
+  ******************************************************************************
+  */
+/* USER CODE END Header */
+/* Includes ------------------------------------------------------------------*/
+#include "main.h"
+
+/* Private includes ----------------------------------------------------------*/
+/* USER CODE BEGIN Includes */
+
+/* USER CODE END Includes */
+
+/* Private typedef -----------------------------------------------------------*/
+/* USER CODE BEGIN PTD */
+
+/* USER CODE END PTD */
+
+/* Private define ------------------------------------------------------------*/
+/* USER CODE BEGIN PD */
+/* USER CODE END PD */
+
+/* Private macro -------------------------------------------------------------*/
+/* USER CODE BEGIN PM */
+
+/* USER CODE END PM */
+
+/* Private variables ---------------------------------------------------------*/
+UART_HandleTypeDef huart2;
+uint8_t check;
+uint32_t test_direction;
+
+
+volatile uint8_t Rx_data[5]= {0};//{18,18,4,4,2}; //{0};
+volatile uint8_t Tx_data[5];//{0,1,0,1,0};//,67,68,69,70};
+struct PortIO Current_Port;
+
+#define FALSE (1==0)
+#define TRUE  (1==1)
+
+uint32_t read_register( volatile uint32_t *register_to_read){
+
+  uint32_t tmp = *register_to_read;
+  return(tmp);
+
+ }
+
+uint8_t Is_the_mode_output(){
+	uint8_t L[4] ={0,0,0,1};
+
+	for(int j=1; j<5; j++){
+		if(Tx_data[j]!= L[j-1]){
+			return(FALSE);
+		}
+	}
+	return(TRUE);
+}
+
+
+struct PortIO
+{
+
+	uint32_t active_clock;   //ok dans gpio init
+	uint32_t gpio_direction; //ok avec utilisateur
+	uint32_t numPin;         //ok avec utilisateur
+	uint32_t val;            //ok avec utilisateur
+	uint32_t portLetter;     //ok avec utilisateur
+	uint32_t actual_direction;
+	uint32_t actual_value;
+
+	volatile uint32_t *clock_for_gpio; //ok dans gpio init
+	volatile uint32_t *portAdressCrl; //ok dans gpio init
+	volatile uint32_t *portAdressCrh; //ok dans gpio init
+	volatile uint32_t *portAdressOdr; //ok dans gpio init
+};
+
+void PortIO_Clock(struct PortIO* _this){
+	_this -> clock_for_gpio = (uint32_t*) 0x40021018;
+	_this -> active_clock = 0x1FC;
+
+	*(_this-> clock_for_gpio) = *(_this-> clock_for_gpio) | (_this->active_clock);
+
+}
+
+void PortIO_init(struct PortIO* _this)
+{
+
+	switch(_this->portLetter){
+
+	case 1: //Port A
+		_this ->portAdressCrl =(uint32_t *) 0x40010800;
+		_this ->portAdressCrh =(uint32_t *) 0x40010804;
+		_this ->portAdressOdr=(uint32_t *) 0x4001080C;
+		break;
+
+	case 2: //Port B
+		_this ->portAdressCrl =(uint32_t *) 0x40010C00;
+		_this ->portAdressCrh =(uint32_t *) 0x40010C04;
+		_this ->portAdressOdr =(uint32_t *) 0x40010C0C;
+		break;
+
+	case 3: //Port C
+		_this ->portAdressCrl =(uint32_t *) 0x40011000;
+		_this ->portAdressCrh =(uint32_t *) 0x40011004;
+		_this ->portAdressOdr =(uint32_t *) 0x4001100C;
+		break;
+
+	case 4: //Port D
+		_this ->portAdressCrl =(uint32_t *) 0x40011400;
+		_this ->portAdressCrh =(uint32_t *) 0x40011404;
+		_this ->portAdressOdr =(uint32_t *) 0x4001140C;
+		break;
+
+	}
+
+}
+
+void Port_set_numPin(struct PortIO* _this, uint32_t NumPin){
+	_this->numPin=NumPin;
+
+}
+
+void Port_read_value(struct PortIO* _this){
+
+	_this->actual_value = *(_this->portAdressOdr) & (1<<_this->numPin);
+	if(_this->actual_value == (1<<_this->numPin)){
+		Tx_data[0]=1;
+	}
+	else{
+		Tx_data[0]=0;
+	}
+	//Rx_data[3]=-1;
+
+}
+
+void Port_read_direction(struct PortIO* _this){
+
+
+	if(_this->numPin >=8){
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+3-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+3-32))){
+			Tx_data[1]=1;
+		}
+		else{
+			Tx_data[1]=0;
+		}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+2-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+2-32))){
+			Tx_data[2]=1;
+			}
+		else{
+			Tx_data[2]=0;
+			}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)+1-32));
+		if(test_direction == (1<<(4*(_this-> numPin)+1-32))){
+			Tx_data[3]=1;
+				}
+		else{
+			Tx_data[3]=0;
+				}
+
+		test_direction = *(_this->portAdressCrh) & (1<<(4*(_this-> numPin)-32));
+		if(test_direction == (1<<(4*(_this-> numPin)-32))){
+			Tx_data[4]=1;
+				}
+		else{
+			Tx_data[4]=0;
+				}
+
+	}
+	else{
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+3));
+		if(test_direction == (1<<(4*(_this-> numPin)+3))){
+			Tx_data[1]=1;
+		}
+		else{
+			Tx_data[1]=0;
+		}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+2));
+		if(test_direction == (1<<(4*(_this-> numPin)+2))){
+			Tx_data[2]=1;
+			}
+		else{
+			Tx_data[2]=0;
+			}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)+1));
+		if(test_direction == (1<<(4*(_this-> numPin)+1))){
+			Tx_data[3]=1;
+				}
+		else{
+			Tx_data[3]=0;
+				}
+
+		test_direction = *(_this->portAdressCrl) & (1<<(4*(_this-> numPin)));
+		if(test_direction == (1<<(4*(_this-> numPin)))){
+			Tx_data[4]=1;
+				}
+		else{
+			Tx_data[4]=0;
+				}
+
+	}
+
+}
+
+
+void Port_set_direction(struct PortIO* _this)
+{
+
+	switch(_this ->gpio_direction){
+
+	case 0: ;//input
+	 	 uint32_t decalage_0;
+	 	 uint32_t decalage_1;
+
+	 	  //config CNF5
+		 if(_this-> numPin >=8){
+		 	_this->actual_direction = read_register(_this->portAdressCrh);
+
+		 	decalage_0 = ~(1 << (4*(_this-> numPin) +3-32));
+		 	decalage_1 = ~(1 << (4*(_this-> numPin) +2-32));
+
+		 	_this->actual_direction = _this->actual_direction & decalage_0;
+		 	_this->actual_direction = _this->actual_direction & decalage_1;
+
+
+		 }
+		 else{
+			 _this->actual_direction = read_register(_this->portAdressCrl);
+
+			 decalage_0 = ~(1 << (4*(_this-> numPin) +3));
+		 	 decalage_1 = ~(1 << (4*(_this-> numPin) +2));
+
+		 	 _this->actual_direction = _this->actual_direction & decalage_0;
+		 	 _this->actual_direction = _this->actual_direction & decalage_1;
+
+
+
+		 }
+		 //config MODE
+		 if(_this-> numPin >=8){
+
+	 	   decalage_0 = ~(1 << (4*(_this-> numPin)+1-32));
+	 	   decalage_1 = ~(1 << (4*(_this-> numPin)-32));
+
+		   _this->actual_direction = _this->actual_direction & decalage_0;
+		   _this->actual_direction = _this->actual_direction & decalage_1;
+
+		   *(_this->portAdressCrh) = _this->actual_direction;
+		 }
+
+		 else{
+		 	  decalage_0 = ~(1 << (4*(_this-> numPin)));
+		 	  decalage_1 = ~(1 << (4*(_this-> numPin)));
+
+			  _this->actual_direction = _this->actual_direction & decalage_0;
+			  _this->actual_direction = _this->actual_direction & decalage_1;
+
+			  *(_this->portAdressCrl) = _this->actual_direction;
+
+
+		 }
+
+		break;
+
+	case 1: ;//output
+
+	 	 //Config CNF5
+	 	 if(_this-> numPin >=8){
+	 		_this->actual_direction = read_register(_this->portAdressCrh);
+
+	 	 	 decalage_0 = ~(1 << ((4*(_this-> numPin) +2-32)));
+	 	 	 decalage_1 = ~(1 <<((4*(_this-> numPin) + 3-32)));
+
+	 	 	 _this->actual_direction = _this->actual_direction & decalage_0;
+	 	 	 _this->actual_direction = _this->actual_direction & decalage_1;
+
+	 	 }
+	 	 else{
+	 		_this->actual_direction = read_register(_this->portAdressCrl);
+
+	 	 	 decalage_0 = ~(1 << (4*(_this-> numPin)+2));
+	 	 	 decalage_1 = ~(1 <<(4*(_this-> numPin)+ 3));
+
+	 	 	 _this->actual_direction = _this->actual_direction & decalage_0;
+	 	 	 _this->actual_direction = _this->actual_direction & decalage_1;
+
+	 	 }
+
+	 	 //Config MODE5
+
+	 	if(_this-> numPin>=8){
+	 	 	decalage_1 = 1<<( 4*(_this-> numPin) -32 );
+	 	 	decalage_0 = ~(1 << (4*(_this-> numPin) +1 -32));
+
+		 	_this->actual_direction = _this->actual_direction | decalage_1;
+		 	_this->actual_direction = _this->actual_direction & decalage_0;
+
+		 	*(_this->portAdressCrh) = _this->actual_direction; //*(_this->portAdressCrh) & _this->actual_direction;
+
+	 	}
+
+	 	 else {
+	 	 	decalage_1 = 1<<( 4*(_this-> numPin));
+	 	 	decalage_0 = ~(1 << (4*(_this-> numPin) +1));
+
+		 	_this->actual_direction = _this->actual_direction | decalage_1;
+		 	_this->actual_direction = _this->actual_direction & decalage_0;
+
+		 	*(_this->portAdressCrl) = _this->actual_direction; //*(_this->portAdressCrl) & _this->actual_direction;
+	 	 	}
+
+		break;
+
+	}
+
+
+}
+
+void Port_set_value(struct PortIO* _this){
+
+
+ 	uint32_t decalage_1 =  1<< _this->numPin;
+ 	uint8_t error[5]={3,3,3,3,3};
+ 	uint8_t on[5]={1,0,0,0,1};
+ 	uint8_t off[5]={0,0,0,0,1};
+
+ 	if(_this->val ==3){ //Commande off
+
+ 		//LED off
+ 		decalage_1 = decalage_1 ^ 0xFFFFFFFF;
+ 		*(_this->portAdressOdr) = *(_this->portAdressOdr) & decalage_1;
+ 		 HAL_UART_Transmit(&huart2,off,sizeof(off),100);
+ 	  }
+
+ 	 else if (_this->val ==2){ //Commande ON
+        //LED on
+ 		 Port_read_direction(_this);
+ 		 if(Is_the_mode_output(Tx_data)==TRUE){
+
+ 			*(_this->portAdressOdr) = *(_this->portAdressOdr) | decalage_1;
+ 			HAL_UART_Transmit(&huart2,on,sizeof(on),100);
+ 		 }
+ 		 else{
+ 			 HAL_UART_Transmit(&huart2,error,sizeof(error),100);
+ 			 Rx_data[3]=-1;
+ 		 }
+
+ 	 }
+
+}
+
+
+void Port_free(struct PortIO* _this)
+{
+//
+}
+
+
+/* Private function prototypes -----------------------------------------------*/
+void SystemClock_Config(void);
+//static void MX_GPIO_Init(void);
+static void MX_USART2_UART_Init(void);
+
+
+int main(void)
+{
+
+  /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
+  HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+
+  /* USER CODE END Init */
+
+  /* Configure the system clock */
+  SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
+  /* Initialize all configured peripherals */
+//  MX_GPIO_Init();
+  MX_USART2_UART_Init();
+  /* USER CODE BEGIN 2 */
+
+  PortIO_Clock(&Current_Port);
+
+  /* Infinite loop */
+  /* USER CODE BEGIN WHILE */
+
+while (1)
+  {
+
+	HAL_UART_Receive(&huart2, Rx_data,5,7000);
+
+	 if(Rx_data[0]==18 && Rx_data[1]==18){
+
+		 Current_Port.portLetter = Rx_data[4];
+		 Current_Port.numPin = Rx_data[2];
+		 PortIO_init(&Current_Port); //Adresses correspondantes au port choisi
+
+		 if(Rx_data[3] == 2 || Rx_data[3] ==3){
+			 Current_Port.val = Rx_data[3];
+			 Port_set_value(&Current_Port);
+		 }
+		 else if (Rx_data[3]== 0 || Rx_data[3] ==1){
+			 Current_Port.gpio_direction = Rx_data[3];
+			 Port_set_direction(&Current_Port);
+		 }
+		 else if(Rx_data[3]==4){
+			 Port_read_value(&Current_Port);
+			 Port_read_direction(&Current_Port);
+			 HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);
+			 Rx_data[3]=-1;
+			 HAL_Delay(1000);
+
+		 }
+
+		 }
+    /* USER CODE END WHILE */
+    /* USER CODE BEGIN 3 */
+  }
+  /* USER CODE END 3 */
+}
+
+/**
+  * @brief System Clock Configuration
+  * @retval None
+  */
+void SystemClock_Config(void)
+{
+  RCC_OscInitTypeDef RCC_OscInitStruct = {0};
+  RCC_ClkInitTypeDef RCC_ClkInitStruct = {0};
+
+  /** Initializes the RCC Oscillators according to the specified parameters
+  * in the RCC_OscInitTypeDef structure.
+  */
+  RCC_OscInitStruct.OscillatorType = RCC_OSCILLATORTYPE_HSI;
+  RCC_OscInitStruct.HSIState = RCC_HSI_ON;
+  RCC_OscInitStruct.HSICalibrationValue = RCC_HSICALIBRATION_DEFAULT;
+  RCC_OscInitStruct.PLL.PLLState = RCC_PLL_ON;
+  RCC_OscInitStruct.PLL.PLLSource = RCC_PLLSOURCE_HSI_DIV2;
+  RCC_OscInitStruct.PLL.PLLMUL = RCC_PLL_MUL16;
+  if (HAL_RCC_OscConfig(&RCC_OscInitStruct) != HAL_OK)
+  {
+    Error_Handler();
+  }
+
+  /** Initializes the CPU, AHB and APB buses clocks
+  */
+  RCC_ClkInitStruct.ClockType = RCC_CLOCKTYPE_HCLK|RCC_CLOCKTYPE_SYSCLK
+                              |RCC_CLOCKTYPE_PCLK1|RCC_CLOCKTYPE_PCLK2;
+  RCC_ClkInitStruct.SYSCLKSource = RCC_SYSCLKSOURCE_PLLCLK;
+  RCC_ClkInitStruct.AHBCLKDivider = RCC_SYSCLK_DIV1;
+  RCC_ClkInitStruct.APB1CLKDivider = RCC_HCLK_DIV2;
+  RCC_ClkInitStruct.APB2CLKDivider = RCC_HCLK_DIV1;
+
+  if (HAL_RCC_ClockConfig(&RCC_ClkInitStruct, FLASH_LATENCY_2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+}
+
+/**
+  * @brief USART2 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_USART2_UART_Init(void)
+{
+
+  /* USER CODE BEGIN USART2_Init 0 */
+
+  /* USER CODE END USART2_Init 0 */
+
+  /* USER CODE BEGIN USART2_Init 1 */
+
+  /* USER CODE END USART2_Init 1 */
+  huart2.Instance = USART2;
+  huart2.Init.BaudRate = 115200;
+  huart2.Init.WordLength = UART_WORDLENGTH_8B;
+  huart2.Init.StopBits = UART_STOPBITS_1;
+  huart2.Init.Parity = UART_PARITY_NONE;
+  huart2.Init.Mode = UART_MODE_TX_RX;
+  huart2.Init.HwFlowCtl = UART_HWCONTROL_NONE;
+  huart2.Init.OverSampling = UART_OVERSAMPLING_16;
+  if (HAL_UART_Init(&huart2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN USART2_Init 2 */
+
+  /* USER CODE END USART2_Init 2 */
+
+}
+
+/**
+  * @brief GPIO Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_GPIO_Init(void)
+{
+  GPIO_InitTypeDef GPIO_InitStruct = {0};
+
+  /* GPIO Ports Clock Enable */
+  __HAL_RCC_GPIOC_CLK_ENABLE();
+  __HAL_RCC_GPIOD_CLK_ENABLE();
+  __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(LD2_GPIO_Port, LD2_Pin, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin : B1_Pin */
+  GPIO_InitStruct.Pin = B1_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(B1_GPIO_Port, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : LD2_Pin */
+  GPIO_InitStruct.Pin = LD2_Pin;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
+  HAL_GPIO_Init(LD2_GPIO_Port, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI15_10_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI15_10_IRQn);
+
+}
+
+/* USER CODE BEGIN 4 */
+
+/* USER CODE END 4 */
+
+/**
+  * @brief  This function is executed in case of error occurrence.
+  * @retval None
+  */
+void Error_Handler(void)
+{
+  /* USER CODE BEGIN Error_Handler_Debug */
+  /* User can add his own implementation to report the HAL error return state */
+  __disable_irq();
+  while (1)
+  {
+  }
+  /* USER CODE END Error_Handler_Debug */
+}
+
+#ifdef  USE_FULL_ASSERT
+/**
+  * @brief  Reports the name of the source file and the source line number
+  *         where the assert_param error has occurred.
+  * @param  file: pointer to the source file name
+  * @param  line: assert_param error line source number
+  * @retval None
+  */
+void assert_failed(uint8_t *file, uint32_t line)
+{
+  /* USER CODE BEGIN 6 */
+  /* User can add his own implementation to report the file name and line number,
+     ex: printf("Wrong parameters value: file %s on line %d\r\n", file, line) */
+  /* USER CODE END 6 */
+}
+#endif /* USE_FULL_ASSERT */

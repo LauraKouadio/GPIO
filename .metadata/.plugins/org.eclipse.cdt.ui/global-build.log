@@ -1,0 +1,46 @@
+14:40:19 **** Incremental Build of configuration Debug for project GpioPremierTest ****
+make -j12 all 
+arm-none-eabi-gcc "../Core/Src/main.c" -mcpu=cortex-m3 -std=gnu11 -g3 -DDEBUG -DUSE_HAL_DRIVER -DSTM32F103xB -c -I../Core/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc -I../Drivers/STM32F1xx_HAL_Driver/Inc/Legacy -I../Drivers/CMSIS/Device/ST/STM32F1xx/Include -I../Drivers/CMSIS/Include -O0 -ffunction-sections -fdata-sections -Wall -fstack-usage -MMD -MP -MF"Core/Src/main.d" -MT"Core/Src/main.o" --specs=nano.specs -mfloat-abi=soft -mthumb -o "Core/Src/main.o"
+../Core/Src/main.c: In function 'main':
+../Core/Src/main.c:421:28: warning: passing argument 2 of 'HAL_UART_Receive' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+  421 |  HAL_UART_Receive(&huart2, Rx_data,5,7000);
+      |                            ^~~~~~~
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:30,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:726:72: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
+  726 | HAL_StatusTypeDef HAL_UART_Receive(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                               ~~~~~~~~~^~~~~
+../Core/Src/main.c:440:32: warning: passing argument 2 of 'HAL_UART_Transmit' discards 'volatile' qualifier from pointer target type [-Wdiscarded-qualifiers]
+  440 |     HAL_UART_Transmit(&huart2, Tx_data,sizeof(Tx_data),1000);
+      |                                ^~~~~~~
+In file included from ../Core/Inc/stm32f1xx_hal_conf.h:338,
+                 from ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal.h:30,
+                 from ../Core/Inc/main.h:30,
+                 from ../Core/Src/main.c:20:
+../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h:725:73: note: expected 'uint8_t *' {aka 'unsigned char *'} but argument is of type 'volatile uint8_t *' {aka 'volatile unsigned char *'}
+  725 | HAL_StatusTypeDef HAL_UART_Transmit(UART_HandleTypeDef *huart, uint8_t *pData, uint16_t Size, uint32_t Timeout);
+      |                                                                ~~~~~~~~~^~~~~
+At top level:
+../Core/Src/main.c:529:13: warning: 'MX_GPIO_Init' defined but not used [-Wunused-function]
+  529 | static void MX_GPIO_Init(void)
+      |             ^~~~~~~~~~~~
+arm-none-eabi-gcc -o "GpioPremierTest.elf" @"objects.list"   -mcpu=cortex-m3 -T"C:\Users\kouadio\STM32CubeIDE\workspace_1.11.0\GPIO\GpioPremierTest\STM32F103RBTX_FLASH.ld" --specs=nosys.specs -Wl,-Map="GpioPremierTest.map" -Wl,--gc-sections -static --specs=nano.specs -mfloat-abi=soft -mthumb -Wl,--start-group -lc -lm -Wl,--end-group
+Finished building target: GpioPremierTest.elf
+ 
+arm-none-eabi-size   GpioPremierTest.elf 
+arm-none-eabi-objdump -h -S  GpioPremierTest.elf  > "GpioPremierTest.list"
+   text	   data	    bss	    dec	    hex	filename
+  10164	     20	   1700	  11884	   2e6c	GpioPremierTest.elf
+Finished building: default.size.stdout
+ 
+Finished building: GpioPremierTest.list
+ 
+14:41:15 **** Incremental Build of configuration Debug for project GpioPremierTest ****
+make -j12 all 
+arm-none-eabi-size   GpioPremierTest.elf 
+   text	   data	    bss	    dec	    hex	filename
+  10164	     20	   1700	  11884	   2e6c	GpioPremierTest.elf
+Finished building: default.size.stdout
+ 
