@@ -305,9 +305,7 @@ void PortIO_init(struct PortIO* _this)
  800029c:	4001140c 	.word	0x4001140c
 
 080002a0 <Port_read_value>:
-	_this->numPin=NumPin;
 
-} */
 
 ///Function Port read value: Reads the GPIO output register of a specified pin and store it in Tx_data[0]
 void Port_read_value(struct PortIO* _this){
@@ -1207,7 +1205,7 @@ while (1)
  800089a:	4831      	ldr	r0, [pc, #196]	; (8000960 <main+0xe4>)
  800089c:	f001 fa97 	bl	8001dce <HAL_UART_Receive>
 
-	 if(Rx_data[0]==18 && Rx_data[1]==18){
+	 if(Rx_data[0]==18 && Rx_data[1]==18){            //Beginning of a trame
  80008a0:	4b2e      	ldr	r3, [pc, #184]	; (800095c <main+0xe0>)
  80008a2:	781b      	ldrb	r3, [r3, #0]
  80008a4:	b2db      	uxtb	r3, r3
@@ -1237,7 +1235,7 @@ while (1)
  80008cc:	4822      	ldr	r0, [pc, #136]	; (8000958 <main+0xdc>)
  80008ce:	f7ff fc8d 	bl	80001ec <PortIO_init>
 
-		 if(Rx_data[3] == 2 || Rx_data[3] ==3){
+		 if(Rx_data[3] == 2 || Rx_data[3] ==3){      // Set the GPIO output to 0 or 1
  80008d2:	4b22      	ldr	r3, [pc, #136]	; (800095c <main+0xe0>)
  80008d4:	78db      	ldrb	r3, [r3, #3]
  80008d6:	b2db      	uxtb	r3, r3
@@ -1260,7 +1258,7 @@ while (1)
  80008f4:	f7ff ff52 	bl	800079c <Port_set_value>
  80008f8:	e02c      	b.n	8000954 <main+0xd8>
 		 }
-		 else if (Rx_data[3]== 0 || Rx_data[3] ==1){
+		 else if (Rx_data[3]== 0 || Rx_data[3] ==1){ // Set the GPIO mode to input or output
  80008fa:	4b18      	ldr	r3, [pc, #96]	; (800095c <main+0xe0>)
  80008fc:	78db      	ldrb	r3, [r3, #3]
  80008fe:	b2db      	uxtb	r3, r3
@@ -1283,7 +1281,7 @@ while (1)
  800091c:	f7ff fdf4 	bl	8000508 <Port_set_direction>
  8000920:	e018      	b.n	8000954 <main+0xd8>
 		 }
-		 else if(Rx_data[3]==4){
+		 else if(Rx_data[3]==4){                     // Reading the value of a GPIO
  8000922:	4b0e      	ldr	r3, [pc, #56]	; (800095c <main+0xe0>)
  8000924:	78db      	ldrb	r3, [r3, #3]
  8000926:	b2db      	uxtb	r3, r3

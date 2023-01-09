@@ -1,7 +1,7 @@
 <!-- _coverpage.md -->
 
 
-# GPIO driver <small>1.0</small>
+# GPIO driver :eyes: <small>1.0</small>
 
 > A simple way to control your STM32F103xx board.
 

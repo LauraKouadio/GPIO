@@ -1,16 +1,15 @@
+import serial
+import time
+
 #################################################################################################   STM32F103XX GPIO Driver ###########################################################################################
 # 
-# This driver allows the user to control the I/O, followinf a simple protocol.
+# This driver allows the user to control the I/O, following a simple protocol.
 #   - The user enters a simple command
 #   - According to the command which has been entered, an instance of the class PortConfiguration is created and configured with the method PortConfig.
 #   - The methods Handle_modeOrState, Handle_PortLetter and Handle_PinNumber encode the configuration.
 #   - Unless an error has been detected, the method Prepare_trame will prepare a trame corresponding to the input command and send it to the STM32 board.
 #   - The STM32 will send back a message to confirm that the command has been executed properly. 
 # #
-
-import serial
-import time
-
 
 PortAPinAvailable=[0, 1,2 , 4, 5, 6, 7, 8, 9, 10, 11, 12,13, 14, 15]
 PortBPinAvailable=[0, 3, 4, 5, 6, 7, 8, 9, 10, 12, 13, 14, 15]
@@ -73,12 +72,34 @@ class PortConfiguration:
     def Handle_PinNumber(self):
 
         self.pinNum = int(self.pinNum)
-        
-        if((self.pinNum in PortAPinAvailable) or (self.pinNum in PortBPinAvailable) or (self.pinNum in PortCPinAvailable) or (self.pinNum in PortDPinAvailable)):
-            print("Okay")
-        else:
+
+        match(self.PortLetterCode):
+            case 1:
+                if(self.pinNum in PortAPinAvailable):
+                    print("Okay port A")
+                else:
+                    self.Message='Error the pin number is incorrect.'
+            case 2:
+                if(self.pinNum in PortBPinAvailable):
+                    print("Okay port B")
+                else:
+                    self.Message='Error the pin number is incorrect.'
+
+            case 3:
+                if(self.pinNum in PortCPinAvailable):
+                    print("Okay port C")
+                else:
+                    self.Message='Error the pin number is incorrect.'
+
+            case 4:
+                if (self.pinNum in PortDPinAvailable):
+                    print("Okay pour port D")
+                else:
+                    self.Message='Error the pin number is incorrect.'
             
-            self.Message="Error, the pin number is incorrect."
+            case default:
+                self.Message='Error the port letter code is incorrect.'
+        
 
 
     def Prepare_trame(self):
@@ -156,9 +177,9 @@ serialInst.timeout =1
 
 while True:
     CommandInput= input("""Hello! Enter the desire command among these ones:\n 
-- io.PortLetter.CurrentPort.pinNumber.CurrentPort.modeOrState=out - io.PortLetter.CurrentPort.pinNumber.CurrentPort.modeOrState=in to set the CurrentPort.modeOrState of the pin.\n
-- io.PortLetter.CurrentPort.pinNumber.Value=on - io.PortLetter.CurrentPort.pinNumber.Value=off to set the value of the pin (High=1 ou Low=0).\n
-- io.PortLetter.CurrentPort.pinNumber.val? to read the value of the pin\n""") 
+- io.PortLetter.pinNumber.dir=out - io.PortLetter.pinNumber.dir=in to set the CurrentPort.modeOrState of the pin.\n
+- io.PortLetter.pinNumber.val=on - io.PortLetter.pinNumber.val=off to set the value of the pin (High=1 ou Low=0).\n
+- io.PortLetter.pinNumber.val? to read the value of the pin\n""") 
     
     CurrentPort = PortConfiguration()
     CurrentPort.PortConfig(CommandInput)
@@ -170,9 +191,6 @@ while True:
         CurrentPort.Handle_PortLetter()
         CurrentPort.Handle_PinNumber()
         CurrentPort.Handle_modeOrState()
-
-        print("The message is:",CurrentPort.Message)
-
         
         match(CurrentPort.Message):
             case 'Ready to send':
@@ -200,7 +218,7 @@ while True:
             case("Error, the port letter is incorrect."):
                 print(CurrentPort.Message)
             
-            case("Error, the pin number is incorrect."):
+            case('Error the pin number is incorrect.'):
                 print(CurrentPort.Message)
             case default:
                 print("No match found")
